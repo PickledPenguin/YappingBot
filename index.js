@@ -77,25 +77,36 @@ You can use the command "!add-yap-warning-prompt" followed by your prompt to add
     );
   }
 
-  if (msg.content.toLowerCase().includes("!add-yap-warning-prompt")){
-    var warning = msg.content.substring(23);
-    if (warning.length < 1){
-      msg.channel.send("Please provide a yapping prompt");
-      return;
+  if (msg.content.toLowerCase().includes("!add-yap-warning-prompt")) {
+    var warning = msg.content.substring(23).trim();
+    if (warning.length < 1) {
+        msg.channel.send("Please provide a yapping prompt.");
+        return;
     }
+
     // Check if the warning length exceeds the maximum limit
     if (warning.length > Number(process.env.MAX_WARNING_LENGTH)) {
-      msg.channel.send(`The warning is too long. Please limit it to ${process.env.MAX_WARNING_LENGTH} characters.`);
-      return;
+        msg.channel.send(`The warning is too long. Please limit it to ${process.env.MAX_WARNING_LENGTH} characters.`);
+        return;
     }
 
     saveData = load(saveData);
 
-    if (!Array.isArray(saveData["Warnings"])){
-      saveData["Warnings"] = [];
+    if (!Array.isArray(saveData["Warnings"])) {
+        saveData["Warnings"] = [];
     }
-    saveData["Warnings"].push(warning);
-    save();
+
+    // Check for duplicate warnings (case-insensitive)
+    const duplicateWarning = saveData["Warnings"].some(existingWarning => existingWarning.toLowerCase() === warning.toLowerCase());
+
+    if (duplicateWarning) {
+        msg.channel.send("This yap warning prompt already exists.");
+    } else {
+        saveData["Warnings"].push(warning);
+        msg.channel.send("New yap warning prompt successfully added :thumbsup:");
+    }
+
+    save(saveData);
   }
 
   else if (("" + msg.channel) != process.env.YAPPING_CHANNEL_ID) {
