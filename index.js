@@ -1,3 +1,26 @@
+// All helper functions for index.js
+const express = require('express')
+const app = express()
+const fs = require('fs')
+require("dotenv").config()
+
+const { OpenAI } = require("openai");
+const openai = new OpenAI({
+    apiKey: process.env.OPEN_AI_TOKEN,
+});
+
+const discord = require('discord.js')
+const { Client, GatewayIntentBits } = require('discord.js');
+
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildPresences,
+  ]
+});
+
 var saveData = load(saveData);
 
 app.get('/', (req, res) => {
@@ -38,8 +61,8 @@ client.on('ready', () => {
 
 client.on('messageCreate', async msg => {
 
-  // ignore self messages and other bot messages. Ignore Yapping messages.
-  if (msg.author === client.user || msg.author.bot || ("" + msg.channel.id) != YAPPING_CHANNEL_ID) {
+  // ignore self messages and other bot messages.
+  if (msg.author === client.user || msg.author.bot) {
     return;
   }
 
@@ -75,7 +98,7 @@ You can use the command "!add-yap-warning-prompt" followed by your prompt to add
     save();
   }
 
-  else {
+  else if (("" + msg.channel) != process.env.YAPPING_CHANNEL_ID) {
     const nowInMinutes = Math.ceil(Date.now() / (60 * 1000));
     const expiryTime = nowInMinutes + Number(process.env.YAPPING_MINUTES_TRIGGER);
     const channelId = msg.channel.id;
@@ -95,7 +118,8 @@ You can use the command "!add-yap-warning-prompt" followed by your prompt to add
     if (saveData["YappingRegister"][channelId].length >= process.env.YAPPING_AMOUNT_TRIGGER) {
         const randomWarningPrompt = saveData["Warnings"][Math.floor(Math.random() * saveData["Warnings"].length)];
         saveData["YappingRegister"][channelId] = [];
-        await msg.channel.send(askAI(randomWarningPrompt));
+        askAI(randomWarningPrompt)
+        .then(response => msg.channel.send(response));
     }
   }
 
