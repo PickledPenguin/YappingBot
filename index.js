@@ -123,6 +123,8 @@ You can use the command "!add-yap-warning-prompt" followed by your prompt to add
     }
   }
 
+  save(saveData);
+
 });
 
 client.login(process.env.TOKEN);
